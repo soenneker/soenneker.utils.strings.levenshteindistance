@@ -1,4 +1,4 @@
-# Contributing to Soenneker.Utils.Strings.LevenshteinDistance
+﻿# Contributing to Soenneker.Utils.Strings.LevenshteinDistance
 
 We're excited that you're interested in contributing!
 
