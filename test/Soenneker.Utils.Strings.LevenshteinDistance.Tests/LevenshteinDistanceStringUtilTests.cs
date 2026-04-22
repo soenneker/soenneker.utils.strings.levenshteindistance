@@ -1,15 +1,14 @@
 using AwesomeAssertions;
-using Soenneker.Tests.FixturedUnit;
-using Xunit;
+using Soenneker.Tests.HostedUnit;
 
 
 namespace Soenneker.Utils.Strings.LevenshteinDistance.Tests;
 
-[Collection("Collection")]
-public class LevenshteinDistanceStringUtilTests : FixturedUnitTest
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
+public class LevenshteinDistanceStringUtilTests : HostedUnitTest
 {
 
-    public LevenshteinDistanceStringUtilTests(Fixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public LevenshteinDistanceStringUtilTests(Host host) : base(host)
     {
     }
 
