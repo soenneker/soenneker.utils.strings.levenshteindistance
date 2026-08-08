@@ -1,5 +1,6 @@
 using System.Diagnostics.Contracts;
 using System;
+using System.Buffers;
 
 namespace Soenneker.Utils.Strings.LevenshteinDistance;
 
@@ -48,30 +49,52 @@ public static class LevenshteinDistanceStringUtil
     [Pure]
     public static int ComputeDistance(string s1, string s2)
     {
-        int len1 = s1.Length;
-        int len2 = s2.Length;
+        ReadOnlySpan<char> rows = s1;
+        ReadOnlySpan<char> columns = s2;
 
-        var dp = new int[len1 + 1, len2 + 1];
-
-        for (int i = 0; i <= len1; i++)
-            dp[i, 0] = i;
-
-        for (int j = 0; j <= len2; j++)
-            dp[0, j] = j;
-
-        for (int i = 1; i <= len1; i++)
+        // The row buffers are proportional to the shorter input.
+        if (columns.Length > rows.Length)
         {
-            for (int j = 1; j <= len2; j++)
-            {
-                int cost = s1[i - 1] == s2[j - 1] ? 0 : 1;
-
-                dp[i, j] = Math.Min(
-                    dp[i - 1, j] + 1,                    // Deletion
-                    Math.Min(dp[i, j - 1] + 1,          // Insertion
-                             dp[i - 1, j - 1] + cost)); // Substitution
-            }
+            ReadOnlySpan<char> temp = rows;
+            rows = columns;
+            columns = temp;
         }
 
-        return dp[len1, len2];
+        int width = columns.Length + 1;
+        int[]? rented = null;
+        Span<int> storage = width <= 256
+            ? stackalloc int[width * 2]
+            : (rented = ArrayPool<int>.Shared.Rent(width * 2)).AsSpan(0, width * 2);
+
+        try
+        {
+            Span<int> previous = storage[..width];
+            Span<int> current = storage[width..];
+
+            for (var j = 0; j < width; j++)
+                previous[j] = j;
+
+            for (var i = 1; i <= rows.Length; i++)
+            {
+                current[0] = i;
+
+                for (var j = 1; j < width; j++)
+                {
+                    int cost = rows[i - 1] == columns[j - 1] ? 0 : 1;
+                    current[j] = Math.Min(previous[j] + 1, Math.Min(current[j - 1] + 1, previous[j - 1] + cost));
+                }
+
+                Span<int> swap = previous;
+                previous = current;
+                current = swap;
+            }
+
+            return previous[^1];
+        }
+        finally
+        {
+            if (rented is not null)
+                ArrayPool<int>.Shared.Return(rented);
+        }
     }
 }
