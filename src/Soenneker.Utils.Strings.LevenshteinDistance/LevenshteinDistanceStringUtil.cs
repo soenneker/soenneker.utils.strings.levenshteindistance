@@ -46,6 +46,7 @@ public static class LevenshteinDistanceStringUtil
     /// <summary>
     /// Computes the Levenshtein Distance between two strings.
     /// </summary>
+    /// <returns>Computes the Levenshtein Distance between two strings.</returns>
     [Pure]
     public static int ComputeDistance(string s1, string s2)
     {
