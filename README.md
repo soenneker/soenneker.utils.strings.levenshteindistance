@@ -4,50 +4,49 @@
 [![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.utils.strings.levenshteindistance/codeql.yml?label=CodeQL&style=for-the-badge)](https://github.com/soenneker/soenneker.utils.strings.levenshteindistance/actions/workflows/codeql.yml)
 
 # ![](https://user-images.githubusercontent.com/4441470/224455560-91ed3ee7-f510-4041-a8d2-3fc093025112.png) Soenneker.Utils.Strings.LevenshteinDistance
-### A utility library for comparing strings via the Levenshtein Distance algorithm
+Levenshtein edit distance with normalized and percentage similarity results.
 
 ## Installation
 
-```
+```bash
 dotnet add package Soenneker.Utils.Strings.LevenshteinDistance
 ```
-
-## Why Levenshtein Distance?
-
-Levenshtein Distance, also known as **Edit Distance**, is a widely used metric for measuring the similarity between two strings. It calculates the minimum number of operations required to transform one string into the other, where operations include:
-
-- **Insertion** of a character.
-- **Deletion** of a character.
-- **Substitution** of a character.
-
-Levenshtein Distance is particularly useful in applications like:
-
-### Flexible String Comparison:
-It handles strings of **unequal length** and allows for more flexible comparisons.
-
-### Real-World Scenarios:
-It's well-suited for tasks like:
-- Fuzzy string matching.
-- Spelling correction.
-- DNA sequence analysis.
-- Natural language processing.
-
-### Position-Aware:
-It captures positional changes and structural differences more effectively than set-based metrics like Jaccard or Hamming Distance.
-
-### Comprehensive Error Handling:
-Unlike simpler metrics, it accounts for insertions and deletions, making it robust for strings with typos or omissions.
-
----
 
 ## Usage
 
 ```csharp
+using Soenneker.Utils.Strings.LevenshteinDistance;
+
 var text1 = "kitten";
 var text2 = "sitting";
 
-int distance = LevenshteinDistanceUtil.ComputeDistance(text1, text2); // 3
-double similarityPercentage = LevenshteinDistanceUtil.CalculatePercentage(text1, text2); // ~57.14
+int distance = LevenshteinDistanceStringUtil.ComputeDistance(text1, text2);
+double score = LevenshteinDistanceStringUtil.Calculate(text1, text2);
+double percentage = LevenshteinDistanceStringUtil.CalculatePercentage(text1, text2);
+
+// distance == 3
+// score is approximately 0.5714
+// percentage is approximately 57.14
 ```
 
-This library is efficient, straightforward, and ideal for handling real-world string similarity comparisons where flexibility and accuracy are key.
+`ComputeDistance` returns the minimum number of insertions, deletions, and substitutions needed to transform one input into the other. Each edit costs `1`.
+
+`Calculate` normalizes the distance to a `0`–`1` similarity score:
+
+```text
+1 - distance / length of the longer input
+```
+
+`CalculatePercentage` multiplies that score by 100. Two empty strings return `1` (or `100%`), while an empty string compared with a non-empty string returns `0`.
+
+## Comparison rules and cost
+
+- Comparison is case-sensitive.
+- Characters are compared as UTF-16 code units, not Unicode scalar values or grapheme clusters.
+- Whitespace and punctuation participate like any other character.
+- Runtime is `O(m × n)` for input lengths `m` and `n`.
+- Working memory is `O(min(m, n))`.
+
+Call the static methods directly; no dependency-injection registration is required. Both inputs must be non-null. Normalize casing or Unicode representation before calling if your application requires those equivalences.
+
+Use the raw distance for edit-count thresholds and ranking. Use the normalized score or percentage when comparing pairs with different lengths on a common scale.
