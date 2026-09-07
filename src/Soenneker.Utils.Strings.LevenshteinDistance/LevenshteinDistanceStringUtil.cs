@@ -55,6 +55,21 @@ public static class LevenshteinDistanceStringUtil
         ReadOnlySpan<char> rows = s1;
         ReadOnlySpan<char> columns = s2;
 
+        int prefixLength = rows.CommonPrefixLength(columns);
+        rows = rows[prefixLength..];
+        columns = columns[prefixLength..];
+        while (!rows.IsEmpty && !columns.IsEmpty && rows[^1] == columns[^1])
+        {
+            rows = rows[..^1];
+            columns = columns[..^1];
+        }
+
+        if (rows.IsEmpty)
+            return columns.Length;
+        if (columns.IsEmpty)
+            return rows.Length;
+
+
         // The row buffers are proportional to the shorter input.
         if (columns.Length > rows.Length)
         {
